@@ -1,38 +1,24 @@
 import React from "react";
 
 export default function Home() {
-  // Discord Login
+  // Discord Login (Supabase-ready)
   const discordLogin = () => {
-    const clientId = "1432404124602732675";
-    const redirectUri = encodeURIComponent(
-      "http://localhost:3000/auth/discord/callback"
-    );
-    const scope = "identify email";
-    const responseType = "code";
-    const oauthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}`;
+    const oauthUrl =
+      "https://discord.com/oauth2/authorize?client_id=1432404124602732675&response_type=code&redirect_uri=https%3A%2F%2Ftohpkqtsqfjypkbzlyez.supabase.co%2Fauth%2Fv1%2Fcallback&scope=email+identify";
     window.location.href = oauthUrl;
   };
 
   // Google Login
   const googleLogin = () => {
-    const clientId =
-      "774479974995-7j35a744l6ll6pq4rejmkdb3edp4de1t.apps.googleusercontent.com";
-    const redirectUri = encodeURIComponent(
-      "http://localhost:3000/auth/google/callback"
-    );
-    const scope = "openid email profile";
-    const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
+    const oauthUrl =
+      "https://accounts.google.com/o/oauth2/v2/auth?client_id=774479974995-7j35a744l6ll6pq4rejmkdb3edp4de1t.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fauth%2Fgoogle%2Fcallback&response_type=code&scope=openid%20email%20profile";
     window.location.href = oauthUrl;
   };
 
   // GitHub Login
   const githubLogin = () => {
-    const clientId = "Ov23lidoYXQfnnmKOv4Z";
-    const redirectUri = encodeURIComponent(
-      "http://localhost:3000/auth/github/callback"
-    );
-    const scope = "user:email";
-    const oauthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
+    const oauthUrl =
+      "https://github.com/login/oauth/authorize?client_id=Ov23lidoYXQfnnmKOv4Z&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fauth%2Fgithub%2Fcallback&scope=user:email";
     window.location.href = oauthUrl;
   };
 
@@ -57,24 +43,15 @@ export default function Home() {
         Welcome to NoahMedia
       </h1>
 
-      <button
-        onClick={discordLogin}
-        style={buttonStyle("#7289DA", "#5b6eae")}
-      >
+      <button onClick={discordLogin} style={buttonStyle("#7289DA", "#5b6eae")}>
         Sign in with Discord
       </button>
 
-      <button
-        onClick={googleLogin}
-        style={buttonStyle("#DB4437", "#c1351d")}
-      >
+      <button onClick={googleLogin} style={buttonStyle("#DB4437", "#c1351d")}>
         Sign in with Google
       </button>
 
-      <button
-        onClick={githubLogin}
-        style={buttonStyle("#333", "#555")}
-      >
+      <button onClick={githubLogin} style={buttonStyle("#333", "#555")}>
         Sign in with GitHub
       </button>
 
@@ -99,7 +76,7 @@ export default function Home() {
   );
 }
 
-// Helper function for button styles
+// Button style helper
 const buttonStyle = (bgColor, hoverColor) => ({
   padding: "15px 40px",
   margin: "15px",
@@ -112,10 +89,4 @@ const buttonStyle = (bgColor, hoverColor) => ({
   backgroundColor: bgColor,
   color: "white",
   transition: "all 0.3s ease",
-  hover: {
-    transform: "scale(1.1)",
-    backgroundColor: hoverColor,
-  },
 });
-
-
