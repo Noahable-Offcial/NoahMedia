@@ -1,0 +1,26 @@
+/* globals.css */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+
+button {
+  cursor: pointer;
+  padding: 8px 12px;
+  background-color: #1e40af; /* nice blue color */
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+
+input {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+h1, h2, h3, h4 {
+  margin: 10px 0;
+}
