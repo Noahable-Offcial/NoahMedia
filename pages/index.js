@@ -35,7 +35,7 @@ export default function Home() {
     <div style={{ fontFamily: 'sans-serif', padding: '20px' }}>
       {!user ? (
         <div>
-          <h1>Welcome to NoahMedia</h1>
+          <h1>Welcome to DisTube</h1>
           <button onClick={loginWithGoogle}>Login with Google</button>
         </div>
       ) : (
