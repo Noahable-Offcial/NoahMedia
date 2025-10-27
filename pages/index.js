@@ -1,75 +1,87 @@
-import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
 export default function Home() {
-  const [user, setUser] = useState(null);
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([]);
-  const [videos] = useState([
-    { id: 1, title: 'My First Video', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 2, title: 'Funny Moments', url: 'https://www.youtube.com/embed/jNQXAC9IVRw' },
-  ]);
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-    const channel = supabase
-      .channel('public:messages')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-        setMessages(prev => [...prev, payload.new]);
-      })
-      .subscribe();
-    return () => supabase.removeChannel(channel);
-  }, []);
+  const handleEmailLogin = async () => {
+    const email = prompt("Enter your email:");
+    if (!email) return;
+    const { data, error } = await supabase.auth.signInWithOtp({ email });
+    if (error) alert(error.message);
+    else alert("Check your email for the login link!");
+  };
 
-  async function loginWithGoogle() {
+  const handlePhoneLogin = async () => {
+    const phone = prompt("Enter your phone number (+countrycode):");
+    if (!phone) return;
+    const { data, error } = await supabase.auth.signInWithOtp({ phone });
+    if (error) alert(error.message);
+    else alert("Check your phone for the login link!");
+  };
+
+  const handleGoogleLogin = async () => {
     await supabase.auth.signInWithOAuth({ provider: 'google' });
-  }
+  };
 
-  async function sendMessage() {
-    if (message.trim() === '') return;
-    await supabase.from('messages').insert({ content: message });
-    setMessage('');
-  }
+  const handleGitHubLogin = async () => {
+    await supabase.auth.signInWithOAuth({ provider: 'github' });
+  };
+
+  const unavailableProviders = [
+    "Discord", "Apple", "Twitch", "Spotify", "Azure", "Bitbucket",
+    "Facebook", "LinkedIn", "Notion", "WorkOS", "Zoom"
+  ];
 
   return (
-    <div style={{ fontFamily: 'sans-serif', padding: '20px' }}>
-      {!user ? (
-        <div>
-          <h1>Welcome to DisTube</h1>
-          <button onClick={loginWithGoogle}>Login with Google</button>
-        </div>
-      ) : (
-        <div>
-          <h2>Hello, {user.email}</h2>
+    <div style={{ fontFamily: "sans-serif", textAlign: "center", padding: "50px", background: "#f0f4f8", minHeight: "100vh" }}>
+      
+      <h1 style={{ fontSize: "3rem", marginBottom: "10px", color: "#1e40af" }}>Welcome to NoahTube!</h1>
+      <p style={{ fontSize: "1.2rem", marginBottom: "40px", color: "#374151" }}>
+        Sign up or log in using one of the options below:
+      </p>
 
-          <h3>Chat</h3>
-          <div style={{ border: '1px solid #ccc', padding: '10px', height: '150px', overflowY: 'scroll' }}>
-            {messages.map((msg, i) => (
-              <div key={i}>{msg.content}</div>
-            ))}
+      <div style={{ display: "flex", justifyContent: "center", gap: "20px", flexWrap: "wrap" }}>
+        {/* Available login buttons */}
+        <div>
+          <button onClick={handleEmailLogin} style={buttonStyle("#4ade80")}>Login with Email</button>
+        </div>
+        <div>
+          <button onClick={handlePhoneLogin} style={buttonStyle("#facc15")}>Login with Phone</button>
+        </div>
+        <div>
+          <button onClick={handleGoogleLogin} style={buttonStyle("#4285F4")}>Login with Google</button>
+        </div>
+        <div>
+          <button onClick={handleGitHubLogin} style={buttonStyle("#333")}>Login with GitHub</button>
+        </div>
+      </div>
+
+      {/* Unavailable login methods */}
+      <div style={{ marginTop: "50px", display: "flex", flexWrap: "wrap", gap: "20px", justifyContent: "center" }}>
+        {unavailableProviders.map(provider => (
+          <div key={provider} style={{ background: "#ddd", padding: "15px", borderRadius: "10px", width: "220px" }}>
+            <strong>{provider}</strong>
+            <p style={{ color: "#666", marginTop: "5px", fontSize: "0.9rem" }}>
+              Sorry This Sign In Way Is Unavailable Right Now
+            </p>
           </div>
-          <input
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            placeholder="Type a message..."
-          />
-          <button onClick={sendMessage}>Send</button>
+        ))}
+      </div>
 
-          <h3>Videos</h3>
-          {videos.map(video => (
-            <div key={video.id} style={{ marginBottom: '10px' }}>
-              <h4>{video.title}</h4>
-              <iframe
-                width="300"
-                height="200"
-                src={video.url}
-                title={video.title}
-                allowFullScreen
-              ></iframe>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
+
+// Helper style function
+const buttonStyle = (bgColor) => ({
+  backgroundColor: bgColor,
+  color: "#fff",
+  border: "none",
+  borderRadius: "8px",
+  padding: "15px 25px",
+  fontSize: "1rem",
+  cursor: "pointer",
+  minWidth: "180px",
+  transition: "all 0.2s",
+  boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+});
+
