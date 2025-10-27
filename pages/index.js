@@ -1,87 +1,71 @@
-import { supabase } from '../lib/supabase';
+import { Client, GatewayIntentBits } from "discord.js";
+import express from "express";
+import dotenv from "dotenv";
+import { createClient } from "@supabase/supabase-js";
 
-export default function Home() {
+dotenv.config();
+const app = express();
+app.use(express.json());
 
-  const handleEmailLogin = async () => {
-    const email = prompt("Enter your email:");
-    if (!email) return;
-    const { data, error } = await supabase.auth.signInWithOtp({ email });
-    if (error) alert(error.message);
-    else alert("Check your email for the login link!");
-  };
+// Supabase setup
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-  const handlePhoneLogin = async () => {
-    const phone = prompt("Enter your phone number (+countrycode):");
-    if (!phone) return;
-    const { data, error } = await supabase.auth.signInWithOtp({ phone });
-    if (error) alert(error.message);
-    else alert("Check your phone for the login link!");
-  };
-
-  const handleGoogleLogin = async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'google' });
-  };
-
-  const handleGitHubLogin = async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'github' });
-  };
-
-  const unavailableProviders = [
-    "Discord", "Apple", "Twitch", "Spotify", "Azure", "Bitbucket",
-    "Facebook", "LinkedIn", "Notion", "WorkOS", "Zoom"
-  ];
-
-  return (
-    <div style={{ fontFamily: "sans-serif", textAlign: "center", padding: "50px", background: "#f0f4f8", minHeight: "100vh" }}>
-      
-      <h1 style={{ fontSize: "3rem", marginBottom: "10px", color: "#1e40af" }}>Welcome to NoahTube!</h1>
-      <p style={{ fontSize: "1.2rem", marginBottom: "40px", color: "#374151" }}>
-        Sign up or log in using one of the options below:
-      </p>
-
-      <div style={{ display: "flex", justifyContent: "center", gap: "20px", flexWrap: "wrap" }}>
-        {/* Available login buttons */}
-        <div>
-          <button onClick={handleEmailLogin} style={buttonStyle("#4ade80")}>Login with Email</button>
-        </div>
-        <div>
-          <button onClick={handlePhoneLogin} style={buttonStyle("#facc15")}>Login with Phone</button>
-        </div>
-        <div>
-          <button onClick={handleGoogleLogin} style={buttonStyle("#4285F4")}>Login with Google</button>
-        </div>
-        <div>
-          <button onClick={handleGitHubLogin} style={buttonStyle("#333")}>Login with GitHub</button>
-        </div>
-      </div>
-
-      {/* Unavailable login methods */}
-      <div style={{ marginTop: "50px", display: "flex", flexWrap: "wrap", gap: "20px", justifyContent: "center" }}>
-        {unavailableProviders.map(provider => (
-          <div key={provider} style={{ background: "#ddd", padding: "15px", borderRadius: "10px", width: "220px" }}>
-            <strong>{provider}</strong>
-            <p style={{ color: "#666", marginTop: "5px", fontSize: "0.9rem" }}>
-              Sorry This Sign In Way Is Unavailable Right Now
-            </p>
-          </div>
-        ))}
-      </div>
-
-    </div>
-  );
-}
-
-// Helper style function
-const buttonStyle = (bgColor) => ({
-  backgroundColor: bgColor,
-  color: "#fff",
-  border: "none",
-  borderRadius: "8px",
-  padding: "15px 25px",
-  fontSize: "1rem",
-  cursor: "pointer",
-  minWidth: "180px",
-  transition: "all 0.2s",
-  boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+// Discord bot setup
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages],
+  partials: ["CHANNEL"]
 });
+
+client.once("ready", () => {
+  console.log(`✅ Logged in as ${client.user.tag}`);
+});
+
+// API route to send login code
+app.post("/send-code", async (req, res) => {
+  const { discordId } = req.body;
+  if (!discordId) return res.status(400).json({ error: "Missing discordId" });
+
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+  try {
+    const user = await client.users.fetch(discordId);
+    await user.send(`🔐 Your NoahMedia login code is: **${code}**`);
+
+    // Save code in Supabase
+    await supabase.from("discord_login_codes").insert([{ discord_id: discordId, code, created_at: new Date() }]);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to send DM" });
+  }
+});
+
+// API route to verify login code
+app.post("/verify-code", async (req, res) => {
+  const { discordId, code } = req.body;
+  if (!discordId || !code) return res.status(400).json({ error: "Missing discordId or code" });
+
+  const { data, error } = await supabase
+    .from("discord_login_codes")
+    .select("*")
+    .eq("discord_id", discordId)
+    .eq("code", code)
+    .limit(1);
+
+  if (error || data.length === 0) return res.json({ success: false });
+
+  // Delete code after use
+  await supabase.from("discord_login_codes")
+    .delete()
+    .eq("discord_id", discordId)
+    .eq("code", code);
+
+  res.json({ success: true });
+});
+
+app.listen(3000, () => console.log("🌐 API running on port 3000"));
+client.login(process.env.TOKEN);
 
